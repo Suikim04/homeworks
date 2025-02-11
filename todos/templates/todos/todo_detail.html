@@ -1,0 +1,116 @@
+# Установка Django и создание проекта
+# В терминале выполните:
+# pip install django
+# django-admin startproject hw_3
+# cd hw_3
+# python manage.py startapp todos
+
+# models.py (внутри todos)
+from django.db import models
+
+class Todo(models.Model):
+    title = models.CharField(max_length=255)
+    description = models.TextField()
+    due_date = models.DateField()
+    status = models.BooleanField(default=False)
+
+    def __str__(self):
+        return self.title
+
+# forms.py (внутри todos)
+from django import forms
+from .models import Todo
+
+class TodoForm(forms.ModelForm):
+    class Meta:
+        model = Todo
+        fields = ['title', 'description', 'due_date', 'status']
+
+# views.py (внутри todos)
+from django.shortcuts import render, get_object_or_404, redirect
+from .models import Todo
+from .forms import TodoForm
+
+def todo_list(request):
+    todos = Todo.objects.all()
+    return render(request, 'todos/todo_list.html', {'todos': todos})
+
+def todo_detail(request, id):
+    todo = get_object_or_404(Todo, id=id)
+    return render(request, 'todos/todo_detail.html', {'todo': todo})
+
+def todo_create(request):
+    if request.method == 'POST':
+        form = TodoForm(request.POST)
+        if form.is_valid():
+            form.save()
+            return redirect('todo_list')
+    else:
+        form = TodoForm()
+    return render(request, 'todos/todo_form.html', {'form': form})
+
+def todo_delete(request, id):
+    todo = get_object_or_404(Todo, id=id)
+    todo.delete()
+    return redirect('todo_list')
+
+# urls.py (внутри todos)
+from django.urls import path
+from . import views
+
+urlpatterns = [
+    path('', views.todo_list, name='todo_list'),
+    path('<int:id>/', views.todo_detail, name='todo_detail'),
+    path('create/', views.todo_create, name='todo_create'),
+    path('<int:id>/delete/', views.todo_delete, name='todo_delete'),
+]
+
+# urls.py (внутри hw_3)
+from django.contrib import admin
+from django.urls import path, include
+
+urlpatterns = [
+    path('admin/', admin.site.urls),
+    path('todos/', include('todos.urls')),
+]
+
+# Шаблоны (внутри папки templates/todos):
+
+# todo_list.html
+"""
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Todo List</title>
+</head>
+<body>
+    <h1>Todo List</h1>
+    <ul>
+        {% for todo in todos %}
+            <li><a href="{{ todo.id }}/">{{ todo.title }}</a> - {{ todo.due_date }}</li>
+        {% endfor %}
+    </ul>
+    <a href="create/">Add New Todo</a>
+</body>
+</html>
+"""
+
+# todo_detail.html
+"""
+<!DOCTYPE html>
+<html>
+<head>
+    <title>{{ todo.title }}</title>
+</head>
+<body>
+    <h1>{{ todo.title }}</h1>
+    <p>{{ todo.description }}</p>
+    <p>Due Date: {{ todo.due_date }}</p>
+    <p>Status: {% if todo.status %}Completed{% else %}Pending{% endif %}</p>
+    <a href="/todos/">Back to list</a>
+    <form action="{{ todo.id }}/delete/" method="post">
+        {% csrf_token %}
+        <button type="submit">Delete</button>
+    </form>
+</body>
+</html>
