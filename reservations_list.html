@@ -1,0 +1,38 @@
+{% extends "base.html" %}
+
+{% block title %}Бронирования - Ресторан{% endblock %}
+
+{% block content %}
+<div class="container">
+    <h1 class="mb-4">Список бронирований</h1>
+
+    <button class="btn btn-success mb-3">Добавить бронирование</button>
+
+    <table class="table table-striped">
+        <thead>
+            <tr>
+                <th>ID</th>
+                <th>Клиент</th>
+                <th>Столик</th>
+                <th>Дата</th>
+                <th>Время</th>
+                <th>Действия</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for reservation in reservations %}
+            <tr>
+                <td>{{ reservation.id }}</td>
+                <td>{{ reservation.customer.name }}</td>
+                <td>{{ reservation.table.number }}</td>
+                <td>{{ reservation.date }}</td>
+                <td>{{ reservation.time }}</td>
+                <td>
+                    <button class="btn btn-danger btn-sm">Удалить</button>
+                </td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+{% endblock %}
